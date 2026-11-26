@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101722"><title>WB Barcode Scanner Lite v3.0 — вариант А</title><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101722"><title>WB Barcode Scanner Lite v4.0 — Code 128</title><style>
 :root{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color-scheme:dark;--bg:#101722;--panel:#1b2533;--text:#f4f7fc;--muted:#9caec3;--line:#344155}
 body.light{color-scheme:light;--bg:#f3f6fb;--panel:#fff;--text:#15202d;--muted:#607184;--line:#d9e1eb}
 *{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--bg);color:var(--text)}button{cursor:pointer;touch-action:manipulation} .hidden{display:none!important}
@@ -9,36 +9,23 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;fle
 .bottom{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px}.gallery{display:flex;align-items:center;justify-content:center;gap:8px}.gallery button{font-size:23px;min-width:43px;min-height:43px;padding:4px}.gallery span{font-size:14px;min-width:45px;text-align:center}.primary{background:#6a60ee;color:white;border:0;border-radius:11px;padding:11px 14px;font-weight:700}.keyboard{font-size:21px;min-width:46px;min-height:44px}.inputrow{display:flex;gap:8px;flex:0 0 auto}.inputrow input{min-width:0;flex:1;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px;color:var(--text);font-size:16px}.foot{font-size:11px;color:var(--muted);text-align:center;flex:0 0 auto}
 @media(max-height:690px){main{gap:6px;padding-top:calc(5px + env(safe-area-inset-top));padding-bottom:calc(5px + env(safe-area-inset-bottom))}.readerWrap{height:clamp(125px,20dvh,155px)}h1{font-size:17px}.foot{display:none}.gallery button{min-height:38px;min-width:38px}.keyboard{min-height:38px}}
 @media(max-width:350px){#status{max-width:50%}#status{padding:8px 6px}.gallery{gap:3px}.gallery span{min-width:38px;font-size:12px}}
-</style></head><body><main><header><div><h1>WB Scanner <span style="font-size:12px;color:var(--muted)">Lite</span></h1><small id="catalogInfo">Загрузка каталога…</small></div><button id="theme" aria-label="Сменить тему">☀ / ☾</button></header>
-<div class="toprow"><div class="readerWrap"><div id="reader"></div><div class="cameraBadge">● Камера</div></div><div class="details"><div id="status" role="status">Наведите штрихкод</div><div class="article" id="article">—</div></div></div>
+.readerWrap.expanded{position:fixed;inset:0;width:100%;height:100%;z-index:20;border-radius:0}.cameraControls{position:absolute;bottom:8px;right:8px;display:flex;gap:6px;z-index:21}.expanded .cameraControls{bottom:calc(20px + env(safe-area-inset-bottom))}.searchPanel{position:fixed;inset:0;z-index:30;background:var(--bg);padding:calc(16px + env(safe-area-inset-top)) 12px;overflow:auto}.searchPanel input{width:100%;padding:12px;font-size:16px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px}.result{display:block;width:100%;text-align:left;margin:6px 0;overflow-wrap:anywhere}.cameraBadge{left:7px;right:auto}</style></head><body><main><header><div><h1>WB Scanner <span style="font-size:12px;color:var(--muted)">Lite 4.0</span></h1><small id="catalogInfo">Загрузка каталога…</small></div><button id="theme" aria-label="Сменить тему">☀ / ☾</button></header>
+<div class="toprow"><div class="readerWrap"><div id="reader"></div><div class="cameraBadge">● Камера</div><div class="cameraControls"><button class="secondary" id="torch" hidden>Фонарь</button><button class="secondary" id="expand">⛶</button></div></div><div class="details"><div id="status" role="status">Наведите штрихкод</div><div class="article" id="article">—</div></div></div>
 <div class="photo" id="photo"><div class="placeholder">Здесь появится фотография товара</div></div>
-<div class="bottom"><button class="secondary keyboard" id="toggleManual" aria-label="Ручной ввод штрихкода" aria-expanded="false">⌨</button><div class="gallery"><button class="secondary" id="prev" aria-label="Предыдущее фото">‹</button><span id="counter" class="muted">—</span><button class="secondary" id="next" aria-label="Следующее фото">›</button></div></div>
-<form class="inputrow hidden" id="manual"><input id="barcode" inputmode="numeric" autocomplete="off" placeholder="Введите штрихкод вручную" aria-label="Штрихкод"><button class="primary" type="submit">Найти</button></form><div class="foot" id="cameraInfo">Для камеры нужен HTTPS и разрешение браузера.</div></main><script>
+<div class="bottom"><button class="secondary keyboard" id="toggleManual" aria-label="Поиск товара" aria-expanded="false">Поиск</button><div class="gallery"><button class="secondary" id="prev" aria-label="Предыдущее фото">‹</button><span id="counter" class="muted">—</span><button class="secondary" id="next" aria-label="Следующее фото">›</button></div></div>
+<section id="manual" class="searchPanel hidden"><button class="secondary" id="closeSearch">← Назад</button><h2>Поиск товара</h2><input id="barcode" autocomplete="off" placeholder="Артикул или баркод"><div id="results"></div></section><div class="foot" id="cameraInfo">Для камеры нужен HTTPS и разрешение браузера.</div></main><script>
 let catalog={},last='',photoUrls=[],photoIndex=0,requestId=0,scanner;const el=id=>document.getElementById(id);const ranges=[[143,1],[287,2],[431,3],[719,4],[1007,5],[1061,6],[1115,7],[1169,8],[1313,9],[1601,10],[1655,11],[1919,12],[2045,13],[2189,14],[2405,15],[2621,16],[2837,17],[3053,18],[3269,19],[3485,20],[3701,21],[3917,22],[4133,23],[4349,24],[4565,25],[4781,26],[4997,27],[5213,28],[5429,29],[5645,30]];
 function setStatus(message,kind=''){el('status').textContent=message;el('status').className=kind}function resetPhoto(message){el('photo').innerHTML='<div class="placeholder"></div>';el('photo').firstChild.textContent=message;el('counter').textContent='—'}function urlFor(id,basket,n){const v=Math.floor(id/100000),p=Math.floor(id/1000);return `https://basket-${String(basket).padStart(2,'0')}.wbbasket.ru/vol${v}/part${p}/${id}/images/big/${n}.webp`}
 function loadImg(url,timeout=3200){return new Promise(resolve=>{const img=new Image();let done=false;const finish=ok=>{if(done)return;done=true;clearTimeout(timer);img.onload=img.onerror=null;resolve(ok)};const timer=setTimeout(()=>finish(false),timeout);img.onload=()=>finish(true);img.onerror=()=>finish(false);img.src=url})}
 async function getBasket(id,token){let v=Math.floor(id/100000),candidate=(ranges.find(r=>v<=r[0])||[])[1];let order=[candidate,...Array.from({length:40},(_,i)=>i+1)].filter((x,i,a)=>x&&a.indexOf(x)===i);for(const b of order){if(token!==requestId)return null;if(await loadImg(urlFor(id,b,1),1800))return b}return null}
 function renderPhoto(){if(!photoUrls.length){resetPhoto('Фотографии не найдены');return}const image=document.createElement('img');image.alt='Фотография товара';image.src=photoUrls[photoIndex];image.onerror=()=>{if(el('photo').contains(image))resetPhoto('Ошибка загрузки фотографии')};el('photo').replaceChildren(image);el('counter').textContent=`${photoIndex+1} из ${photoUrls.length}`}
-async function show(code){code=String(code).trim();if(!code)return;if(code===last)return;last=code;const token=++requestId;photoUrls=[];photoIndex=0;el('article').textContent='—';resetPhoto('Поиск товара…');const item=catalog[code];if(!item){setStatus('ШТРИХКОД НЕ НАЙДЕН','bad');resetPhoto('Нет товара в справочнике');return}el('article').textContent=item.seller;setStatus('ТОВАР НАЙДЕН','ok');const basket=await getBasket(item.wb,token);if(token!==requestId)return;if(!basket){setStatus('ТОВАР НАЙДЕН · фотографии недоступны','wait');resetPhoto('Не удалось получить фотографии с WB');return}photoUrls=[urlFor(item.wb,basket,1)];renderPhoto();for(let i=2;i<=20;i++){if(token!==requestId)return;const url=urlFor(item.wb,basket,i);if(await loadImg(url,1400)){photoUrls.push(url);el('counter').textContent=`${photoIndex+1} из ${photoUrls.length}`}else break}}
-// В каталоге EAN-13: проверяем контрольную цифру, чтобы не показывать ложные ошибки.
-function validEan13(s){if(!/^\d{13}$/.test(s))return false;let sum=0;for(let i=0;i<12;i++)sum+=Number(s[i])*(i%2?3:1);return (10-sum%10)%10===Number(s[12])}
-let recentCode='',recentAt=0,unknownCode='',unknownAt=0,unknownHits=0;
-function onScan(raw){
- const code=String(raw).trim();if(!validEan13(code))return;
- const now=Date.now();
- if(!catalog[code]){
-   // Не заменяем найденный товар случайным ошибочным чтением.
-   if(code===unknownCode&&now-unknownAt<1800)unknownHits++;
-   else {unknownCode=code;unknownHits=1;}
-   unknownAt=now;
-   if(unknownHits>=3&&now-recentAt>1200&&!catalog[last]){setStatus('ШТРИХКОД НЕ НАЙДЕН','bad');el('cameraInfo').textContent='Считан код: '+code+' · проверьте этикетку';unknownHits=0;}
-   return;
- }
- unknownCode='';unknownHits=0;
- if(code===recentCode&&now-recentAt<1500)return;
- recentCode=code;recentAt=now;
- if(code===last)last='';
- show(code);
+async function show(code){code=String(code).trim();if(!code)return;if(code===last)return;last=code;const token=++requestId;photoUrls=[];photoIndex=0;el('article').textContent='—';resetPhoto('Поиск товара…');const item=catalog[code];if(!item){setStatus('ШТРИХКОД НЕ НАЙДЕН','bad');resetPhoto('Нет товара в справочнике');return}el('article').textContent=item.seller;setStatus('ТОВАР НАЙДЕН','ok');const basket=await getBasket(item.wb,token);if(token!==requestId)return;if(!basket){setStatus('ТОВАР НАЙДЕН · фотографии недоступны','wait');resetPhoto('Не удалось получить фотографии с WB');return}photoUrls=[urlFor(item.wb,basket,1)];renderPhoto();for(let i=2;i<=20;i++){if(token!==requestId)return;const url=urlFor(item.wb,basket,i);if(await loadImg(url,1400)){if(token!==requestId)return;photoUrls.push(url);el('counter').textContent=`${photoIndex+1} из ${photoUrls.length}`}else break}}
+let recentCode='',recentAt=0,unknownCode='',unknownAt=0,unknownHits=0,audio;
+function beep(){try{if(!audio||audio.state!=='running')return;const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(audio.currentTime+.12)}catch{}}
+document.addEventListener('pointerdown',()=>{try{audio ||= new (window.AudioContext||window.webkitAudioContext)();audio.resume()}catch{}},{passive:true});
+function onScan(raw){if(!el('manual').classList.contains('hidden'))return;const code=String(raw).trim();if(!code)return;const now=Date.now();if(code===recentCode&&now-recentAt<1500)return;
+if(!catalog[code]){if(!/^\d{13}$/.test(code))return;if(code===unknownCode&&now-unknownAt<1800)unknownHits++;else{unknownCode=code;unknownHits=1}unknownAt=now;if(unknownHits<3)return;}
+unknownHits=0;recentCode=code;recentAt=now;if(catalog[code]){beep();setExpanded(false)}if(code!==last)show(code);
 }
 // Сначала нативный BarcodeDetector; если его нет — ZXing JS (другой движок).
 let activeStream=null, scanLoop=0, scanBusy=false, zxingReader=null;
@@ -50,11 +37,11 @@ function loadZXing(){return new Promise((resolve,reject)=>{if(window.ZXing)retur
 async function startNative(){
  if(!('BarcodeDetector' in window)||!navigator.mediaDevices?.getUserMedia)return false;
  let formats;try{formats=await BarcodeDetector.getSupportedFormats()}catch{return false}
- if(!formats.includes('ean_13'))return false;
- const detector=new BarcodeDetector({formats:['ean_13']});
+ if(!formats.includes('code_128'))return false;
+ const detector=new BarcodeDetector({formats:formats.filter(f=>['code_128','ean_13'].includes(f))});
  try{
   activeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
-  video.srcObject=activeStream;el('reader').replaceChildren(video);await video.play();
+  video.srcObject=activeStream;el('reader').replaceChildren(video);await video.play();setupTorch();
  }catch(err){if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null}throw err}
  cameraNote('Камера активна · BarcodeDetector · наведите на штрихкод');
  let previous=0;
@@ -63,29 +50,33 @@ async function startNative(){
   scanLoop=requestAnimationFrame(tick);
   if(scanBusy||time-previous<95||video.readyState<2)return;
   previous=time;scanBusy=true;
-  try{const found=await detector.detect(video);for(const item of found){if(item.rawValue){onScan(item.rawValue);break}}}catch(err){/* временный сбой кадра */}finally{scanBusy=false}
+  try{const found=await detector.detect(video);for(const item of found){if(item.rawValue){onScan(item.rawValue);if(catalog[item.rawValue])break}}}catch(err){/* временный сбой кадра */}finally{scanBusy=false}
  }
  scanLoop=requestAnimationFrame(tick);return true;
 }
 async function startZXing(){
  await loadZXing();
  el('reader').replaceChildren(video);
- const hints=new Map();hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.EAN_13]);hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+ const hints=new Map();hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.CODE_128,ZXing.BarcodeFormat.EAN_13]);hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
  zxingReader=new ZXing.BrowserMultiFormatReader(hints,120);
  cameraNote('Запуск камеры · ZXing…');
  // ZXing сам управляет видеопотоком и непрерывным декодированием.
- await zxingReader.decodeFromVideoDevice(undefined,video,(result,error)=>{
+ await zxingReader.decodeFromConstraints({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}},video,(result,error)=>{
   if(result){onScan(result.getText());cameraNote('Камера активна · ZXing · наведите на штрихкод')}
  });
- cameraNote('Камера активна · ZXing · наведите на штрихкод');
+ cameraNote('Камера активна · ZXing · наведите на штрихкод');setupTorch();
 }
 async function start(){
  try{
-  if(await startNative())return;
+  try{if(await startNative())return;}catch(e){console.warn(e);}
   await startZXing();
  }catch(err){
   cameraNote('Не удалось запустить камеру: '+(err?.message||err)+'. Можно ввести штрихкод вручную.');
  }
 }
-el('toggleManual').onclick=()=>{const hidden=el('manual').classList.toggle('hidden');el('toggleManual').setAttribute('aria-expanded',String(!hidden));if(!hidden)el('barcode').focus()};el('manual').onsubmit=e=>{e.preventDefault();last='';show(el('barcode').value);el('manual').classList.add('hidden');el('toggleManual').setAttribute('aria-expanded','false');el('barcode').blur()};el('prev').onclick=()=>{if(photoUrls.length){photoIndex=(photoIndex+photoUrls.length-1)%photoUrls.length;renderPhoto()}};el('next').onclick=()=>{if(photoUrls.length){photoIndex=(photoIndex+1)%photoUrls.length;renderPhoto()}};let x=0;el('photo').addEventListener('touchstart',e=>x=e.changedTouches[0].clientX,{passive:true});el('photo').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-x;if(Math.abs(d)>45)(d<0?el('next'):el('prev')).click()},{passive:true});el('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('wb-theme',document.body.classList.contains('light')?'light':'dark')};if(localStorage.getItem('wb-theme')==='light')document.body.classList.add('light');fetch('catalog.json?v=3',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(data=>{catalog=data;el('catalogInfo').textContent=`В справочнике ${Object.keys(data).length} штрихкодов`;start()}).catch(e=>{setStatus('Ошибка загрузки справочника: '+e.message,'bad');start()});
+function setExpanded(v){document.querySelector('.readerWrap').classList.toggle('expanded',v);el('expand').textContent=v?'Свернуть':'⛶'}
+el('expand').onclick=()=>setExpanded(!document.querySelector('.readerWrap').classList.contains('expanded'));
+let torchOn=false;function setupTorch(){const track=video.srcObject?.getVideoTracks()[0];el('torch').hidden=!track?.getCapabilities?.().torch;el('torch').onclick=async()=>{try{await track.applyConstraints({advanced:[{torch:!torchOn}]});torchOn=!torchOn;el('torch').textContent=torchOn?'Выключить':'Фонарь'}catch{cameraNote('Фонарь недоступен')}}}
+function search(){const q=el('barcode').value.trim().toLowerCase();const box=el('results');box.replaceChildren();if(!q)return;const matches=Object.entries(catalog).filter(([code,item])=>code.includes(q)||String(item.seller).toLowerCase().includes(q));for(const [code,item] of matches.slice(0,100)){const b=document.createElement('button');b.className='secondary result';b.textContent=item.seller+' · '+code;b.onclick=()=>{el('manual').classList.add('hidden');last='';show(code)};box.append(b)}if(!matches.length)box.textContent='Ничего не найдено';}
+el('barcode').oninput=search;el('toggleManual').onclick=()=>{el('manual').classList.remove('hidden');el('barcode').focus();search()};el('closeSearch').onclick=()=>el('manual').classList.add('hidden');el('prev').onclick=()=>{if(photoUrls.length){photoIndex=(photoIndex+photoUrls.length-1)%photoUrls.length;renderPhoto()}};el('next').onclick=()=>{if(photoUrls.length){photoIndex=(photoIndex+1)%photoUrls.length;renderPhoto()}};let x=0;el('photo').addEventListener('touchstart',e=>x=e.changedTouches[0].clientX,{passive:true});el('photo').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-x;if(Math.abs(d)>45)(d<0?el('next'):el('prev')).click()},{passive:true});el('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('wb-theme',document.body.classList.contains('light')?'light':'dark')};if(localStorage.getItem('wb-theme')==='light')document.body.classList.add('light');fetch('catalog.json?v=4',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(data=>{catalog=data;el('catalogInfo').textContent=`В справочнике ${Object.keys(data).length} штрихкодов`;start()}).catch(e=>{setStatus('Ошибка загрузки справочника: '+e.message,'bad');start()});
 </script></body></html>
